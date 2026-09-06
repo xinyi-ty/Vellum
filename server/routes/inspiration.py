@@ -8,6 +8,7 @@ from ..models import (
     CompilePromptRequest,
     CompiledPrompt,
     InspirationState,
+    RefreshHintsRequest,
     ReviseDraftRequest,
     StartInspirationRequest,
 )
@@ -42,6 +43,14 @@ def answer_question(request: AnswerQuestionRequest):
 def compile_prompt(request: CompilePromptRequest):
     try:
         return get_service().compile(request.state)
+    except (ModelGatewayError, ValidationError) as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.post("/hints/refresh", response_model=InspirationState)
+def refresh_hints(request: RefreshHintsRequest):
+    try:
+        return get_service().refresh_hints(request.state, request.excluded_examples)
     except (ModelGatewayError, ValidationError) as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 

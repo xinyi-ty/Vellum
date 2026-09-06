@@ -24,6 +24,7 @@ class DraftConstraints(BaseModel):
 
 
 class VisualDraft(BaseModel):
+    scene_context: DraftStatement | None = None
     core_intent: DraftStatement
     facts: list[DraftStatement] = Field(default_factory=list, max_length=12)
     visual_language: list[DraftStatement] = Field(default_factory=list, max_length=12)
@@ -43,12 +44,20 @@ class KeyQuestion(BaseModel):
     options: list[QuestionOption] = Field(..., min_length=2, max_length=3)
 
 
+class InspirationHint(BaseModel):
+    id: str = Field(..., min_length=1, max_length=80)
+    label: str = Field(..., min_length=1, max_length=40)
+    suggestion: str = Field(..., min_length=1, max_length=240)
+    example: str = Field(..., min_length=1, max_length=240)
+
+
 class InspirationState(BaseModel):
     original_idea: str = Field(..., min_length=1, max_length=4000)
     mode: CreationMode = CreationMode.collaborative
     understanding: str = Field(..., min_length=1, max_length=1000)
     draft: VisualDraft
     question: KeyQuestion | None = None
+    inspiration_hints: list[InspirationHint] = Field(default_factory=list, max_length=4)
     questions_asked: int = Field(0, ge=0, le=2)
     status: Literal["needs_input", "ready"]
 
@@ -89,6 +98,11 @@ class ReviseDraftRequest(BaseModel):
     instruction: str = Field(..., min_length=1, max_length=2000)
 
 
+class RefreshHintsRequest(BaseModel):
+    state: InspirationState
+    excluded_examples: list[str] = Field(default_factory=list, max_length=40)
+
+
 class CompilePromptRequest(BaseModel):
     state: InspirationState
 
@@ -103,3 +117,8 @@ class TurnResult(BaseModel):
     understanding: str
     draft: VisualDraft
     question: KeyQuestion | None = None
+    inspiration_hints: list[InspirationHint] = Field(..., min_length=4, max_length=4)
+
+
+class HintBatch(BaseModel):
+    inspiration_hints: list[InspirationHint] = Field(..., min_length=4, max_length=4)
